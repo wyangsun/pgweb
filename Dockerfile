@@ -1,5 +1,5 @@
 FROM golang:1.8-alpine
-MAINTAINER vungle <yang.wang@gmail.com>
+MAINTAINER  yang.wang <wy823307791@gmail.com>
 
 WORKDIR /go/src/github.com/sosedoff/pgweb
 
