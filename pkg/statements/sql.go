@@ -21,6 +21,33 @@ FROM
 ORDER BY
   schema_name ASC`
 
+  // ---------------------------------------------------------------------------
+
+  UserList = `
+SELECT
+  usename
+FROM
+  pg_user`
+
+  // ---------------------------------------------------------------------------
+
+  GroupList = `
+SELECT
+  groname
+FROM
+  pg_group`
+
+  // ---------------------------------------------------------------------------
+  
+  ListUserPrivileges = `
+SELECT 
+  grantor as user,
+  grantee as group,
+  table_name,
+  privilege_type
+FROM
+  information_schema.table_privileges`
+
 	// ---------------------------------------------------------------------------
 
 	Info = `

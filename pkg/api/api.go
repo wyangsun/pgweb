@@ -299,6 +299,21 @@ func GetSchemas(c *gin.Context) {
 	serveResult(res, err, c)
 }
 
+func GetUsers(c *gin.Context) {
+	res, err := DB(c).UserList()
+	serveResult(res, err, c)
+}
+
+func GetGroup(c *gin.Context) {
+	res, err := DB(c).GroupList()
+	serveResult(res, err, c)
+}
+
+func GetUserPrivileges(c *gin.Context) {
+	res, err := DB(c).ListUserPrivileges()
+	serveResult(res, err, c)
+}
+
 func GetTable(c *gin.Context) {
 	var res *client.Result
 	var err error
@@ -310,6 +325,40 @@ func GetTable(c *gin.Context) {
 	}
 
 	serveResult(res, err, c)
+}
+
+func GroupAction(c *gin.Context) {
+	groupaction := c.Request.FormValue("action")
+	username := c.Request.FormValue("username")
+    res, err := DB(c).Group(c.Params.ByName("group"), groupaction, username)
+    serveResult(res, err, c)
+}
+
+func UserAction(c *gin.Context) {
+	useraction := c.Request.FormValue("action")
+	password := c.Request.FormValue("password")
+    res, err := DB(c).User(c.Params.ByName("user"), useraction, password)
+    serveResult(res, err, c)
+}
+
+func GrantPrivileges(c *gin.Context) {
+	privileges := c.Request.FormValue("privileges")
+	on_object := c.Request.FormValue("on_object")
+	to_object := c.Request.FormValue("to_object")
+	on_object_class := c.Request.FormValue("on_object_class")
+    to_object_class := c.Request.FormValue("to_object_class")
+    res, err := DB(c).Grant(privileges, on_object, to_object, on_object_class, to_object_class)
+    serveResult(res, err, c)
+}
+
+func RevokePrivileges(c *gin.Context) {
+	privileges := c.Request.FormValue("privileges")
+	on_object := c.Request.FormValue("on_object")
+	to_object := c.Request.FormValue("to_object")
+	on_object_class := c.Request.FormValue("on_object_class")
+    to_object_class := c.Request.FormValue("to_object_class")
+    res, err := DB(c).Revoke(privileges, on_object, to_object, on_object_class, to_object_class)
+    serveResult(res, err, c)
 }
 
 func GetTableRows(c *gin.Context) {
