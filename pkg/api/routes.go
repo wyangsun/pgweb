@@ -52,6 +52,13 @@ func SetupRoutes(router *gin.Engine) {
 		api.GET("/history", GetHistory)
 		api.GET("/bookmarks", GetBookmarks)
 		api.GET("/export", DataExport)
+		api.GET("/userlist", GetUsers)
+		api.GET("/grouplist", GetGroup)
+		api.GET("/userprivileges", GetUserPrivileges)
+		api.POST("/group/:group", GroupAction)
+		api.POST("/user/:user", UserAction)
+		api.POST("/grant", GrantPrivileges)
+		api.POST("/revoke", RevokePrivileges)
 	}
 
 	group.GET("/connect/:resource", ConnectWithBackend)

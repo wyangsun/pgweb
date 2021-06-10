@@ -151,6 +151,18 @@ func (client *Client) Schemas() ([]string, error) {
 	return client.fetchRows(statements.Schemas)
 }
 
+func (client *Client) UserList() ([]string, error) {
+	return client.fetchRows(statements.UserList)
+}
+
+func (client *Client) GroupList() ([]string, error) {
+	return client.fetchRows(statements.GroupList)
+}
+
+func (client *Client) ListUserPrivileges() (*Result, error) {
+	return client.query(statements.ListUserPrivileges)
+}
+
 func (client *Client) Objects() (*Result, error) {
 	return client.query(statements.Objects)
 }
@@ -162,6 +174,66 @@ func (client *Client) Table(table string) (*Result, error) {
 
 func (client *Client) MaterializedView(name string) (*Result, error) {
 	return client.query(statements.MaterializedView, name)
+}
+
+func (client *Client) Group(group string, groupaction string, username string) (*Result, error) {
+	sql := fmt.Sprintf(`SELECT * FROM pg_group WHERE groname = '%s'`, group)
+	switch groupaction {
+		case "create": sql = fmt.Sprintf(`CREATE GROUP "%s"`, group)
+		case "drop": sql = fmt.Sprintf(`DROP GROUP "%s"`, group)
+		case "adduser": sql = fmt.Sprintf(`ALTER GROUP "%s" ADD USER %s`, group, username)
+		case "dropuser": sql = fmt.Sprintf(`ALTER GROUP "%s" DROP USER %s`, group, username)
+		case "privileges": sql = fmt.Sprintf(`SELECT table_name,privilege_type FROM information_schema.table_privileges WHERE grantee = '%s'`, group) 
+	}
+	return client.query(sql)
+}
+
+func (client *Client) User(user string, useraction string, password string) (*Result, error) {
+	sql := fmt.Sprintf(`SELECT * FROM pg_user WHERE usename = '%s'`, user)
+	switch useraction {
+		case "create": sql = fmt.Sprintf(`CREATE USER "%s" PASSWORD '%s'`, user, password)
+		case "alter": sql = fmt.Sprintf(`ALTER USER "%s" PASSWORD '%s'`, user, password)
+		case "drop": sql = fmt.Sprintf(`DROP USER IF EXISTS "%s"`, user)
+	}
+	return client.query(sql)
+}
+
+func (client *Client) Grant(privileges string, on_object string, to_object string, on_object_class string, to_object_class string) (*Result, error) {
+	sql := fmt.Sprintf(`GRANT %s ON TABLE %s TO GROUP %s`, privileges, on_object, to_object)
+	if to_object_class == "user" {
+		switch on_object_class {
+    	    case "table": sql = fmt.Sprintf(`GRANT %s ON TABLE %s TO %s`, privileges, on_object, to_object)
+    	    case "database": sql = fmt.Sprintf(`GRANT %s ON DATABASE %s TO %s`, privileges, on_object, to_object)
+    	    case "schema": sql = fmt.Sprintf(`GRANT %s ON SCHEMA %s TO %s`, privileges, on_object, to_object)
+        }
+	} else {
+		switch on_object_class {
+     	    case "table": sql = fmt.Sprintf(`GRANT %s ON TABLE %s TO GROUP %s`, privileges, on_object, to_object)
+     	    case "database": sql = fmt.Sprintf(`GRANT %s ON DATABASE %s TO GROUP %s`, privileges, on_object, to_object)
+     	    case "schema": sql = fmt.Sprintf(`GRANT %s ON SCHEMA %s TO GROUP %s`, privileges, on_object, to_object)
+        }
+	}
+
+	return client.query(sql)
+}
+
+func (client *Client) Revoke(privileges string, on_object string, to_object string, on_object_class string, to_object_class string) (*Result, error) {
+	sql := fmt.Sprintf(`REVOKE %s ON TABLE %s FROM GROUP %s`, privileges, on_object, to_object)
+	if to_object_class == "user" {
+		switch on_object_class {
+    	    case "table": sql = fmt.Sprintf(`REVOKE %s ON TABLE %s FROM %s`, privileges, on_object, to_object)
+    	    case "database": sql = fmt.Sprintf(`REVOKE %s ON DATABASE %s FROM %s`, privileges, on_object, to_object)
+    	    case "schema": sql = fmt.Sprintf(`REVOKE %s ON SCHEMA %s FROM %s`, privileges, on_object, to_object)
+        }
+	} else {
+		switch on_object_class {
+     	    case "table": sql = fmt.Sprintf(`REVOKE %s ON TABLE %s FROM GROUP %s`, privileges, on_object, to_object)
+     	    case "database": sql = fmt.Sprintf(`REVOKE %s ON DATABASE %s FROM GROUP %s`, privileges, on_object, to_object)
+     	    case "schema": sql = fmt.Sprintf(`REVOKE %s ON SCHEMA %s FROM GROUP %s`, privileges, on_object, to_object)
+        }
+	}
+
+	return client.query(sql)
 }
 
 func (client *Client) TableRows(table string, opts RowsOptions) (*Result, error) {
